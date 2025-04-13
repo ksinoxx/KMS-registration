@@ -30,21 +30,20 @@ app.MapPost("/", ([FromBody] KMS dto, ApplicationContext db) =>
 });
 app.MapPut("/", ([FromQuery] Guid id, UpdateKMSDTO dto, ApplicationContext db) => 
 {
-    KMS buffer = db.KMSs.FirstOrDefault(b => b.Id == id);
+    KMS buffer = await db.KMSs.FirstOrDefaultAsync(b => b.Id == id);
     if (buffer == null)
     {
         return Results.NotFound();
     }
-    var updatedKMS = new KMS
-    {
-        Name = dto.name,
-        Firstname = dto.firstname,
-        Numphone = dto.numphone
-    };
+
+    buffer.Name = dto.name;
+    buffer.Firstname = dto.firstname;
+    buffer.Numphone = dto.numphone;
+
     var validationResults = new List<ValidationResult>();
-    if (!Validator.TryValidateObject(buffer, new ValidationContext(buffer), validationResults, true))
-    { return Results.BadRequest(validationResults); }
-    db.SaveChanges();
+    if (!Validator.TryValidateObject(db, new ValidationContext(db), validationResults, true))
+    { return Results.BadRequest(buffer); }
+    await db.SaveChangesAsync();
     return Results.Json(buffer);
 });
 app.MapDelete("/", ([FromQuery] Guid id, ApplicationContext db) => 
